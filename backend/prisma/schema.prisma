@@ -1,0 +1,256 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  passwordNoHash String?
+  name           String
+  phone          String?
+  credits        Float    @default(0.0)
+  role           String   @default("USER") // USER, PREMIUM, MODERATOR, ADMIN, SUSPENDED, VIP, PARTNER, ANALYST
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  offers             Offer[]
+  buyerTransactions  Transaction[] @relation("BuyerTransactions")
+  sellerTransactions Transaction[] @relation("SellerTransactions")
+  
+  // Avaliações feitas por este usuário
+  givenRatings    Rating[] @relation("ReviewerRatings")
+  // Avaliações recebidas por este usuário
+  receivedRatings Rating[] @relation("ReviewedRatings")
+  
+  // Edições de dados de passageiros
+  editorEdits   PassengerDataEdit[] @relation("EditorEdits")
+  approverEdits PassengerDataEdit[] @relation("ApproverEdits")
+  
+  // Notificações
+  notifications Notification[]
+  
+  // Verificações de identidade
+  verifications UserVerification[]
+  reviewedVerifications UserVerification[] @relation("ReviewedVerifications")
+  
+  // Tickets de suporte
+  supportTickets SupportTicket[] @relation("UserTickets")
+  assignedTickets SupportTicket[] @relation("AssignedTickets")
+  ticketResponses SupportTicketResponse[] @relation("TicketResponses")
+  
+  @@index([email])
+  @@index([isVerified])
+  @@map("users")
+}
+
+model Airline {
+  id    String @id @default(cuid())
+  name  String @unique
+  code  String @unique
+  
+  offers Offer[]
+  
+  @@map("airlines")
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  milesAmount Int
+  price       Float
+  type        String   @default("SALE") // SALE, BUY, EXCHANGE
+  status      String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  airlineId String
+  airline   Airline @relation(fields: [airlineId], references: [id])
+  
+  transactions Transaction[]
+  
+  @@map("offers")
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  transactionHash String   @unique // Hash único para rastreamento
+  status          String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  amount          Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  buyerId  String
+  buyer    User   @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  sellerId String
+  seller   User   @relation("SellerTransactions", fields: [sellerId], references: [id])
+  offerId  String
+  offer    Offer  @relation(fields: [offerId], references: [id])
+  
+  ratings       Rating[]
+  passengerData PassengerData[]
+  
+  @@map("transactions")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  rating    Int      // 1 to 5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Quem está avaliando
+  reviewerId String
+  reviewer   User   @relation("ReviewerRatings", fields: [reviewerId], references: [id])
+  
+  // Quem está sendo avaliado
+  reviewedId String
+  reviewed   User   @relation("ReviewedRatings", fields: [reviewedId], references: [id])
+  
+  // Transação relacionada
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  
+  // Garantir que cada usuário só pode avaliar uma vez por transação
+  @@unique([reviewerId, transactionId])
+  @@map("ratings")
+}
+
+model PassengerData {
+  id          String   @id @default(cuid())
+  fullName    String
+  cpf         String
+  birthDate   String   // Formato DD/MM/YYYY
+  email       String
+  fareType    String   // Econômica, Executiva, Primeira Classe
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamento com transação
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  
+  // Histórico de edições
+  editHistory PassengerDataEdit[]
+  
+  @@map("passenger_data")
+}
+
+model PassengerDataEdit {
+  id          String   @id @default(cuid())
+  fieldName   String   // Nome do campo editado
+  oldValue    String?  // Valor anterior
+  newValue    String   // Novo valor
+  editType    String   // FREE (primeiros 15min), PENDING_APPROVAL, APPROVED, REJECTED
+  reason      String?  // Motivo da edição
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Quem fez a edição (comprador)
+  editorId String
+  editor   User   @relation("EditorEdits", fields: [editorId], references: [id])
+  
+  // Quem aprova/rejeita (vendedor)
+  approverId String?
+  approver   User?   @relation("ApproverEdits", fields: [approverId], references: [id])
+  
+  // Dados do passageiro relacionados
+  passengerDataId String
+  passengerData   PassengerData @relation(fields: [passengerDataId], references: [id])
+  
+  @@map("passenger_data_edits")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   // Usuário que recebe a notificação
+  type        String   // SALE, PASSENGER_DATA_EDIT, APPROVAL_REQUEST, etc.
+  title       String   // Título da notificação
+  message     String   // Mensagem da notificação
+  data        String?  // JSON com dados adicionais (transactionId, etc.)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+model UserVerification {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  status            String    @default("NOT_SUBMITTED")
+  documentType      String?
+  documentFrontUrl  String?
+  documentBackUrl   String?
+  userPhotoUrl      String?
+  rejectionReason   String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  user     User  @relation(fields: [userId], references: [id])
+  reviewer User? @relation("ReviewedVerifications", fields: [reviewedBy], references: [id])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  category    String   // TECHNICAL, BILLING, ACCOUNT, TRANSACTION, OTHER
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Usuário que criou o ticket
+  userId String
+  user   User   @relation("UserTickets", fields: [userId], references: [id])
+  
+  // Admin que está atendendo (opcional)
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  
+  // Respostas do ticket
+  responses SupportTicketResponse[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([assignedToId])
+  @@map("support_tickets")
+}
+
+model SupportTicketResponse {
+  id        String   @id @default(cuid())
+  message   String
+  isFromAdmin Boolean @default(false)
+  createdAt DateTime @default(now())
+  
+  // Ticket relacionado
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id])
+  
+  // Usuário que enviou a resposta
+  userId String
+  user   User   @relation("TicketResponses", fields: [userId], references: [id])
+  
+  @@index([ticketId])
+  @@map("support_ticket_responses")
+}
+

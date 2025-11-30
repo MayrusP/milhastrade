@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Acesso - Sistema de Suporte</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Acesso - Sistema de Suporte</h1>
+    
+    <div class="test-item">
+        <h3>1. Teste de Acesso às Páginas</h3>
+        <button onclick="testPage('/support')">Testar /support</button>
+        <button onclick="testPage('/admin/support')">Testar /admin/support</button>
+        <button onclick="testPage('/dashboard')">Testar /dashboard</button>
+        <div id="page-results"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>2. Teste de API</h3>
+        <button onclick="testAPI()">Testar API de Suporte</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>3. Links Diretos</h3>
+        <p>
+            <a href="http://localhost:3000/support" target="_blank">🎫 Abrir Página de Suporte</a><br>
+            <a href="http://localhost:3000/admin/support" target="_blank">👑 Abrir Admin de Suporte</a><br>
+            <a href="http://localhost:3000/dashboard" target="_blank">📊 Abrir Dashboard</a>
+        </p>
+    </div>
+
+    <script>
+        function testPage(path) {
+            const results = document.getElementById('page-results');
+            results.innerHTML += `<p>Testando ${path}...</p>`;
+            
+            fetch(`http://localhost:3000${path}`)
+                .then(response => {
+                    if (response.ok) {
+                        results.innerHTML += `<p class="success">✅ ${path} - Acessível</p>`;
+                    } else {
+                        results.innerHTML += `<p class="error">❌ ${path} - Erro ${response.status}</p>`;
+                    }
+                })
+                .catch(error => {
+                    results.innerHTML += `<p class="error">❌ ${path} - Erro: ${error.message}</p>`;
+                });
+        }
+
+        function testAPI() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<p>Testando API...</p>';
+            
+            // Teste com token mock
+            fetch('http://localhost:5000/api/support/tickets', {
+                headers: {
+                    'Authorization': 'Bearer mock-jwt-token-cmhdz5jff0000u6nsnp5x0csp',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    results.innerHTML += '<p class="success">✅ API de Suporte funcionando!</p>';
+                } else {
+                    results.innerHTML += '<p class="error">❌ API retornou erro</p>';
+                }
+            })
+            .catch(error => {
+                results.innerHTML += `<p class="error">❌ Erro na API: ${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

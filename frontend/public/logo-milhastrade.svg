@@ -1,0 +1,26 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo com gradiente -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Círculo de fundo -->
+  <circle cx="32" cy="32" r="32" fill="url(#bg-gradient)"/>
+  
+  <!-- Avião principal -->
+  <path d="M16 32L24 28L32 16L36 16L32 28L40 26L44 22L48 24L44 32L48 40L44 42L40 38L32 36L36 48L32 48L24 36L16 32Z" fill="white"/>
+  
+  <!-- Detalhes e sombra do avião -->
+  <path d="M18 32L24 29L32 18L34 18L32 29L38 27L42 24L44 25L42 32L44 39L42 40L38 37L32 35L34 46L32 46L24 35L18 32Z" fill="#e5e7eb" opacity="0.3"/>
+  
+  <!-- Janelas do avião -->
+  <circle cx="38" cy="32" r="2" fill="#2563eb"/>
+  <circle cx="34" cy="30" r="1" fill="#2563eb"/>
+  <circle cx="34" cy="34" r="1" fill="#2563eb"/>
+  
+  <!-- Texto "MT" estilizado -->
+  <text x="32" y="56" font-family="Arial, sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="white">MT</text>
+</svg>

@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos base para modo escuro */
+@layer base {
+  html {
+    @apply transition-colors duration-200;
+  }
+  
+  body {
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+  }
+}
+
+/* Teste manual para debug */
+.theme-test {
+  background-color: yellow;
+  color: black;
+}
+
+.dark .theme-test {
+  background-color: purple;
+  color: white;
+}
+
+/* CSS personalizado para modo escuro - FALLBACK */
+.dark {
+  /* Headers */
+  --header-bg: rgb(31 41 55); /* gray-800 */
+  --header-border: rgb(55 65 81); /* gray-700 */
+  --header-text: rgb(255 255 255); /* white */
+  
+  /* Backgrounds */
+  --bg-main: rgb(17 24 39); /* gray-900 */
+  --bg-card: rgb(31 41 55); /* gray-800 */
+  --bg-hover: rgb(55 65 81); /* gray-700 */
+  --bg-light: rgb(17 24 39); /* gray-900 para bg-gray-50 */
+  
+  /* Text */
+  --text-primary: rgb(255 255 255); /* white */
+  --text-secondary: rgb(209 213 219); /* gray-300 - mais claro */
+  --text-tertiary: rgb(156 163 175); /* gray-400 */
+  
+  /* Borders */
+  --border-color: rgb(55 65 81); /* gray-700 */
+  --border-light: rgb(75 85 99); /* gray-600 */
+}
+
+/* Aplicar variáveis CSS */
+.dark header {
+  background-color: var(--header-bg) !important;
+  border-color: var(--header-border) !important;
+  color: var(--header-text) !important;
+}
+
+.dark main {
+  background-color: var(--bg-main) !important;
+}
+
+/* Backgrounds */
+.dark .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-light) !important;
+}
+
+/* Textos - mais claros no modo escuro */
+.dark .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+/* Bordas */
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-light) !important;
+}
+
+/* Inputs, Selects e Textareas no modo escuro */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* Options dos selects no modo escuro */
+.dark select option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Focus states para inputs, selects e textareas */
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: var(--bg-card) !important;
+  border-color: rgb(59 130 246) !important; /* blue-500 para focus */
+  color: var(--text-primary) !important;
+}
+
+/* Botões e links */
+.dark .hover\\:bg-gray-50:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.dark .hover\\:text-gray-700:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Animação para notificações */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
