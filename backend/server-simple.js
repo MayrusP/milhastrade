@@ -339,22 +339,12 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.get('/api/auth/me', async (req, res) => {
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
+    // O authMiddleware já decodificou o token e colocou o usuário em req.user
+    const userId = req.user.id;
     
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token não fornecido'
-      });
-    }
-    
-    const token = authHeader.replace('Bearer ', '');
-    console.log('🔍 GET /api/auth/me - Token:', token);
-    
-    // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    console.log('🔍 GET /api/auth/me - User ID:', userId);
     
     // Buscar usuário real no banco
     let user = await prisma.user.findUnique({
@@ -397,15 +387,12 @@ app.get('/api/auth/me', async (req, res) => {
 });
 
 // User profile endpoints
-app.get('/api/user/profile', async (req, res) => {
+app.get('/api/user/profile', authMiddleware, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
+    // O authMiddleware já decodificou o token e colocou o usuário em req.user
+    const userId = req.user.id;
     
-    console.log('👤 GET /api/user/profile - Token:', token);
-    
-    // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    console.log('👤 GET /api/user/profile - User ID:', userId);
     
     // Buscar usuário real no banco com contadores
     let user = await prisma.user.findUnique({
