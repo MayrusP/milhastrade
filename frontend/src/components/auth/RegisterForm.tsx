@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuthSimple';
 import { PhoneInput } from '../common/PhoneInput';
 import { PasswordRequirements } from '../common/PasswordRequirements';
 import { isValidPhone, validatePassword } from '../../utils/formatters';
+import { API_BASE_URL } from '../../config/api';
 
 export const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -55,7 +56,7 @@ export const RegisterForm = () => {
       // Remove confirmPassword antes de enviar
       const { confirmPassword, ...dataToSend } = formData;
       
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

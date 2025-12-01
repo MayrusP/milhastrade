@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/common/Layout';
 import { useAuth } from '../hooks/useAuthSimple';
+import { API_BASE_URL, API_URL } from '../config/api';
 
 export const StatusPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -13,7 +14,7 @@ export const StatusPage: React.FC = () => {
 
   const testApiConnection = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/health');
+      const response = await fetch(`${API_BASE_URL}/health`);
       const data = await response.json();
       setApiData(data);
       setApiStatus('success');
@@ -142,7 +143,7 @@ const TestEndpoint: React.FC<TestEndpointProps> = ({ name, url, method, requires
         }
       }
 
-      const res = await fetch(`http://localhost:5000${url}`, {
+      const res = await fetch(`${API_URL}${url}`, {
         method,
         headers,
       });

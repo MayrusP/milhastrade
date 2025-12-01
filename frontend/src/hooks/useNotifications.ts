@@ -60,7 +60,7 @@ export const useNotifications = () => {
     if (!token) return;
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
+    const interval = setInterval(fetchNotifications, 60000); // 60 segundos
 
     return () => clearInterval(interval);
   }, [fetchNotifications]);

@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuthSimple';
 import { Navigate, Link } from 'react-router-dom';
 import { SimpleLineChart } from '../components/charts/SimpleLineChart';
 import { AdminVerificationPanel } from '../components/verification/AdminVerificationPanel';
+import { API_BASE_URL } from '../config/api';
 
 interface DashboardData {
   overview: {
@@ -105,7 +106,7 @@ export const AdminDashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:5000/api/admin/dashboard', {
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -125,7 +126,7 @@ export const AdminDashboardPage = () => {
   const fetchActivities = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:5000/api/admin/activities', {
+      const response = await fetch(`${API_BASE_URL}/admin/activities`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

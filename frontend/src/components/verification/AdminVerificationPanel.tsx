@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { verificationService, PendingVerification, VerificationStats } from '../../services/verificationService';
+import { API_URL } from '../../config/api';
 
 export const AdminVerificationPanel: React.FC = () => {
   const [pendingVerifications, setPendingVerifications] = useState<PendingVerification[]>([]);
@@ -210,7 +211,7 @@ export const AdminVerificationPanel: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-white mb-3">Frente do Documento</h4>
                   <img
-                    src={`http://localhost:5000${selectedVerification.documentFrontUrl}`}
+                    src={`${API_URL}${selectedVerification.documentFrontUrl}`}
                     alt="Frente do documento"
                     className="w-full rounded-lg border"
                   />
@@ -218,7 +219,7 @@ export const AdminVerificationPanel: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-white mb-3">Verso do Documento</h4>
                   <img
-                    src={`http://localhost:5000${selectedVerification.documentBackUrl}`}
+                    src={`${API_URL}${selectedVerification.documentBackUrl}`}
                     alt="Verso do documento"
                     className="w-full rounded-lg border"
                   />
@@ -227,7 +228,7 @@ export const AdminVerificationPanel: React.FC = () => {
                   <h4 className="font-medium text-gray-900 dark:text-white mb-3">Selfie com Documento</h4>
                   {selectedVerification.userPhotoUrl ? (
                     <img
-                      src={`http://localhost:5000${selectedVerification.userPhotoUrl}`}
+                      src={`${API_URL}${selectedVerification.userPhotoUrl}`}
                       alt="Selfie do usuário segurando documento"
                       className="w-full rounded-lg border"
                     />
