@@ -163,14 +163,6 @@ export const NotificationsPanel: React.FC = () => {
                               </p>
                             )}
                           </div>
-                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-500">
-                            <a
-                              href="/dashboard"
-                              className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
-                            >
-                              → Ir para Aprovações Pendentes
-                            </a>
-                          </div>
                         </div>
                       )}
 
