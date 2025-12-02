@@ -2362,6 +2362,16 @@ app.get('/api/transactions/:transactionId/passengers', async (req, res) => {
     const freeEditTime = 15 * 60 * 1000; // 15 minutos em ms
     const timeRemaining = Math.max(0, Math.floor((freeEditTime - timeDiff) / 1000)); // Converter para segundos
     
+    console.log('⏱️ Cálculo do timer:', {
+      transactionId: transaction.id,
+      createdAt: transaction.createdAt,
+      now: now.toISOString(),
+      timeDiffMs: timeDiff,
+      timeDiffMinutes: Math.floor(timeDiff / 60000),
+      timeRemainingSeconds: timeRemaining,
+      timeRemainingMinutes: Math.floor(timeRemaining / 60)
+    });
+    
     // Formatar dados dos passageiros
     const formattedPassengers = transaction.passengerData.map(passenger => ({
       id: passenger.id,
