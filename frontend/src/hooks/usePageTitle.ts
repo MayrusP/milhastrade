@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 export const usePageTitle = (title: string, unreadCount?: number) => {
   useEffect(() => {
+    console.log('🟣 usePageTitle EXECUTADO!', { title, unreadCount });
     const baseTitle = title || 'MilhasTrade';
     const prefix = unreadCount && unreadCount > 0 ? `(${unreadCount}) ` : '';
     document.title = `${prefix}${baseTitle}`;

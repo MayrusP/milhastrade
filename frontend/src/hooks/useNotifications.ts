@@ -17,6 +17,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
+    console.log('🔵 fetchNotifications CHAMADO!', new Date().toISOString());
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) return;
@@ -32,7 +33,7 @@ export const useNotifications = () => {
     }
   }, []);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     try {
       await api.put(`/notifications/${id}/read`);
       setNotifications(prev =>
@@ -42,28 +43,32 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Erro ao marcar notificação:', error);
     }
-  };
+  }, []);
 
-  const markAllAsRead = async () => {
-    try {
-      await api.put('/notifications/read-all');
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Erro ao marcar todas notificações:', error);
-    }
-  };
+  const markAllAsRead = useCallback(async () => {
+    console.log('🔴 markAllAsRead CHAMADO! FUNÇÃO DESABILITADA');
+    // FUNÇÃO COMPLETAMENTE DESABILITADA PARA DEBUG
+    // NÃO FAZ NADA - APENAS RETORNA
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+  }, []);
 
-  // Polling a cada 10 segundos
+  // Polling DESABILITADO temporariamente para debug
   useEffect(() => {
+    console.log('🟢 useEffect de notificações EXECUTADO!', new Date().toISOString());
     const token = localStorage.getItem('auth_token');
-    if (!token) return;
+    if (!token) {
+      console.log('⚠️ Sem token, não vai buscar notificações');
+      return;
+    }
 
+    // Carregar notificações apenas UMA VEZ ao montar
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // 60 segundos
-
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    
+    // POLLING DESABILITADO - Descomentar depois de corrigir o loop
+    // const interval = setInterval(fetchNotifications, 60000);
+    // return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     notifications,

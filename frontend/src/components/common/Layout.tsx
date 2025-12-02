@@ -100,6 +100,7 @@ const SimpleFooter = () => (
 );
 
 export const Layout = ({ children, showFooter = true }: LayoutProps) => {
+  console.log('🟡 Layout RENDERIZADO!', new Date().toISOString());
   const { notifications, unreadCount, markAsRead } = useNotifications();
   
   // Atualizar título da aba com contador de notificações

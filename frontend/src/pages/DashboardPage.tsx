@@ -75,14 +75,7 @@ interface Transaction {
 
 export const DashboardPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
-  const { markAllAsRead } = useNotifications();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  
-  // Limpar notificações mostradas e marcar todas como lidas quando visitar o Dashboard
-  useEffect(() => {
-    localStorage.removeItem('shownNotifications');
-    markAllAsRead();
-  }, [markAllAsRead]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingRatings, setPendingRatings] = useState<Transaction[]>([]);

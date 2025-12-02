@@ -49,7 +49,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
         }, 5000);
       });
     }
-  }, [notifications, shownNotifications]);
+  }, [notifications]); // Removido shownNotifications da dependência
 
   const handleClose = (id: string) => {
     setVisibleNotifications(prev => prev.filter(nId => nId !== id));

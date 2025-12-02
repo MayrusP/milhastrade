@@ -11,6 +11,24 @@ const prisma = new PrismaClient();
 
 const app = express();
 const PORT = 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'a7f8d9e6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8';
+const jwt = require('jsonwebtoken');
+
+// Helper function para extrair userId do token
+function getUserIdFromToken(authHeader) {
+  if (!authHeader) {
+    throw new Error('Token não fornecido');
+  }
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.userId;
+  } catch (err) {
+    throw new Error('Token inválido ou expirado');
+  }
+}
 
 // Middleware
 app.use(cors());
@@ -540,13 +558,18 @@ app.get('/api/user/public-profile/:userId', async (req, res) => {
 
 app.get('/api/user/offers', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-    
-    console.log('🛒 GET /api/user/offers - Token:', token);
+    console.log('🛒 GET /api/user/offers');
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Buscar ofertas reais do usuário no banco
     const offers = await prisma.offer.findMany({
@@ -583,15 +606,21 @@ app.get('/api/user/offers', async (req, res) => {
 // Criar nova oferta
 app.post('/api/offers', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { title, description, milesAmount, price, type, airlineId } = req.body;
     
-    console.log('🛒 POST /api/offers - Token:', token);
+    console.log('🛒 POST /api/offers - Criando oferta');
     console.log('Dados da oferta:', { title, milesAmount, price, type, airlineId });
     
-    // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    // Extrair userId do token
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Validar dados obrigatórios
     if (!title || !milesAmount || !price || !type || !airlineId) {
@@ -665,15 +694,21 @@ app.post('/api/offers', async (req, res) => {
 // Comprar oferta
 app.post('/api/offers/:id/buy', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { id: offerId } = req.params;
     const { passengersData = [] } = req.body;
     
     console.log('🛒 POST /api/offers/:id/buy - Oferta:', offerId);
     
     // Extrair ID do usuário do token
-    let buyerId = token.replace('mock-jwt-token-', '');
+    let buyerId;
+    try {
+      buyerId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Buscar a oferta
     const offer = await prisma.offer.findUnique({
@@ -1489,90 +1524,283 @@ app.get('/api/user/transactions/pending-ratings', async (req, res) => {
 });
 
 // Admin endpoints
-app.get('/api/admin/dashboard', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      dashboard: {
-        overview: {
-          totalUsers: 150,
-          totalOffers: 45,
-          totalTransactions: 23,
-          totalCredits: 125000,
-          activeOffers: 12,
-          completedTransactions: 18,
-          pendingTransactions: 5,
-          avgTransactionValue: 2500,
-          avgRating: 4.3,
-          totalRatings: 67
-        },
-        usersByRole: {
-          'USER': 140,
-          'PREMIUM': 8,
-          'ADMIN': 2
-        },
-        dailyTransactions: Array.from({ length: 30 }, (_, i) => ({
-          date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-          count: Math.floor(Math.random() * 10) + 1,
-          totalAmount: Math.floor(Math.random() * 10000) + 1000,
-          avgAmount: Math.floor(Math.random() * 3000) + 1000
-        })),
-        dailyCredits: Array.from({ length: 30 }, (_, i) => ({
-          date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-          totalCredits: Math.floor(Math.random() * 50000) + 100000
-        })),
-        topUsers: [
-          { id: '1', name: 'João Silva', email: 'joao@example.com', totalTransactions: 15 },
-          { id: '2', name: 'Maria Santos', email: 'maria@example.com', totalTransactions: 12 },
-          { id: '3', name: 'Pedro Costa', email: 'pedro@example.com', totalTransactions: 8 }
-        ],
-        offersByAirline: [],
-        userGrowth: []
-      }
+app.get('/api/admin/dashboard', authMiddleware, async (req, res) => {
+  try {
+    console.log('👑 GET /api/admin/dashboard - Admin:', req.user.name);
+
+    // Verificar se é admin
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acesso negado. Apenas administradores.'
+      });
     }
-  });
+
+    // Buscar estatísticas reais do banco
+    const [
+      totalUsers,
+      totalOffers,
+      totalTransactions,
+      activeOffers,
+      completedTransactions,
+      pendingTransactions,
+      usersByRole,
+      totalCreditsResult,
+      avgRatingResult,
+      totalRatings,
+      topUsers,
+      offersByAirline
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.offer.count(),
+      prisma.transaction.count(),
+      prisma.offer.count({ where: { status: 'ACTIVE' } }),
+      prisma.transaction.count({ where: { status: 'COMPLETED' } }),
+      prisma.transaction.count({ where: { status: 'PENDING' } }),
+      prisma.user.groupBy({
+        by: ['role'],
+        _count: true
+      }),
+      prisma.user.aggregate({
+        _sum: { credits: true }
+      }),
+      prisma.rating.aggregate({
+        _avg: { rating: true }
+      }),
+      prisma.rating.count(),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: {
+          sellerTransactions: {
+            _count: 'desc'
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          _count: {
+            select: {
+              sellerTransactions: true,
+              buyerTransactions: true
+            }
+          }
+        }
+      }),
+      prisma.offer.groupBy({
+        by: ['airlineId'],
+        _count: true,
+        orderBy: {
+          _count: {
+            airlineId: 'desc'
+          }
+        },
+        take: 10
+      })
+    ]);
+
+    // Calcular valor médio de transação
+    const avgTransactionResult = await prisma.transaction.aggregate({
+      _avg: { amount: true },
+      where: { status: 'COMPLETED' }
+    });
+
+    // Formatar usersByRole
+    const usersByRoleFormatted = {};
+    usersByRole.forEach(item => {
+      usersByRoleFormatted[item.role] = item._count;
+    });
+
+    // Buscar nomes das companhias aéreas
+    const offersByAirlineWithNames = await Promise.all(
+      offersByAirline.map(async (item) => {
+        const airline = await prisma.airline.findUnique({
+          where: { id: item.airlineId },
+          select: { name: true }
+        });
+        return {
+          airline: airline?.name || 'Desconhecida',
+          count: item._count
+        };
+      })
+    );
+
+    // Formatar top users
+    const topUsersFormatted = topUsers.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      totalTransactions: user._count.sellerTransactions + user._count.buyerTransactions
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        dashboard: {
+          overview: {
+            totalUsers,
+            totalOffers,
+            totalTransactions,
+            totalCredits: totalCreditsResult._sum.credits || 0,
+            activeOffers,
+            completedTransactions,
+            pendingTransactions,
+            avgTransactionValue: avgTransactionResult._avg.amount || 0,
+            avgRating: avgRatingResult._avg.rating || 0,
+            totalRatings
+          },
+          usersByRole: usersByRoleFormatted,
+          topUsers: topUsersFormatted,
+          offersByAirline: offersByAirlineWithNames,
+          dailyTransactions: [], // TODO: Implementar se necessário
+          dailyCredits: [], // TODO: Implementar se necessário
+          userGrowth: [] // TODO: Implementar se necessário
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar dashboard admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
 });
 
-app.get('/api/admin/activities', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      recentTransactions: [
-        {
-          id: '1',
-          transactionHash: 'TXN-001-2024',
-          amount: 1500,
-          status: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          buyer: { name: 'João Silva', email: 'joao@example.com' },
-          seller: { name: 'Maria Santos', email: 'maria@example.com' },
-          offer: { title: 'Milhas TAM - Ótimo preço!', milesAmount: 50000 }
-        }
-      ],
-      recentOffers: [
-        {
-          id: '1',
-          title: 'Milhas TAM - Ótimo preço!',
-          milesAmount: 50000,
-          price: 1500,
-          status: 'ACTIVE',
-          createdAt: new Date().toISOString(),
-          user: { name: 'João Silva', email: 'joao@example.com' },
-          airline: { name: 'TAM Linhas Aéreas' }
-        }
-      ],
-      recentUsers: [
-        {
-          id: '1',
-          name: 'João Silva',
-          email: 'joao@example.com',
-          role: 'USER',
-          createdAt: new Date().toISOString()
-        }
-      ],
-      recentRatings: []
+app.get('/api/admin/activities', authMiddleware, async (req, res) => {
+  try {
+    console.log('👑 GET /api/admin/activities - Admin:', req.user.name);
+
+    // Verificar se é admin
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acesso negado. Apenas administradores.'
+      });
     }
-  });
+
+    // Buscar atividades recentes do banco
+    const [recentTransactions, recentOffers, recentUsers, recentRatings] = await Promise.all([
+      prisma.transaction.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          buyer: {
+            select: { id: true, name: true, email: true }
+          },
+          seller: {
+            select: { id: true, name: true, email: true }
+          },
+          offer: {
+            select: { 
+              id: true,
+              title: true, 
+              milesAmount: true,
+              airline: {
+                select: { name: true }
+              }
+            }
+          }
+        }
+      }),
+      prisma.offer.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          },
+          airline: {
+            select: { id: true, name: true }
+          }
+        }
+      }),
+      prisma.user.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true
+        }
+      }),
+      prisma.rating.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          rater: {
+            select: { id: true, name: true, email: true }
+          },
+          rated: {
+            select: { id: true, name: true, email: true }
+          },
+          transaction: {
+            select: {
+              id: true,
+              transactionHash: true,
+              offer: {
+                select: { title: true }
+              }
+            }
+          }
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        recentTransactions: recentTransactions.map(t => ({
+          id: t.id,
+          transactionHash: t.transactionHash,
+          amount: t.amount,
+          status: t.status,
+          createdAt: t.createdAt.toISOString(),
+          buyer: t.buyer,
+          seller: t.seller,
+          offer: {
+            title: t.offer.title,
+            milesAmount: t.offer.milesAmount,
+            airline: t.offer.airline.name
+          }
+        })),
+        recentOffers: recentOffers.map(o => ({
+          id: o.id,
+          title: o.title,
+          milesAmount: o.milesAmount,
+          price: o.price,
+          status: o.status,
+          createdAt: o.createdAt.toISOString(),
+          user: o.user,
+          airline: o.airline
+        })),
+        recentUsers: recentUsers.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          createdAt: u.createdAt.toISOString()
+        })),
+        recentRatings: recentRatings.map(r => ({
+          id: r.id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt.toISOString(),
+          rater: r.rater,
+          rated: r.rated,
+          transaction: r.transaction
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar atividades admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
 });
 
 // Verification endpoints - USANDO BANCO DE DADOS REAL
