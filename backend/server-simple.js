@@ -2311,14 +2311,20 @@ app.post('/api/transactions/:transactionId/rating', (req, res) => {
 // Buscar dados dos passageiros de uma transação
 app.get('/api/transactions/:transactionId/passengers', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { transactionId } = req.params;
     
-    console.log(`👥 GET /api/transactions/${transactionId}/passengers - Token: ${token}`);
+    console.log(`👥 GET /api/transactions/${transactionId}/passengers`);
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Verificar se a transação existe e se o usuário tem acesso
     const transaction = await prisma.transaction.findFirst({
@@ -2396,16 +2402,22 @@ app.get('/api/transactions/:transactionId/passengers', async (req, res) => {
 // Editar dados de um passageiro
 app.put('/api/transactions/:transactionId/passengers/:passengerId', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { transactionId, passengerId } = req.params;
     const { fullName, cpf, birthDate, email, fareType, reason } = req.body;
     
-    console.log(`✏️ PUT /api/transactions/${transactionId}/passengers/${passengerId} - Token: ${token}`);
+    console.log(`✏️ PUT /api/transactions/${transactionId}/passengers/${passengerId}`);
     console.log('Dados para edição:', { fullName, cpf, birthDate, email, fareType, reason });
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Verificar se a transação existe e se o usuário é o comprador
     const transaction = await prisma.transaction.findFirst({
@@ -2550,16 +2562,22 @@ app.put('/api/transactions/:transactionId/passengers/:passengerId', async (req, 
 // Adicionar novos passageiros a uma transação
 app.post('/api/transactions/:transactionId/passengers', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { transactionId } = req.params;
     const { passengers } = req.body;
     
-    console.log(`👥 POST /api/transactions/${transactionId}/passengers - Token: ${token}`);
+    console.log(`👥 POST /api/transactions/${transactionId}/passengers`);
     console.log(`Adicionando ${passengers?.length || 0} passageiros`);
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Verificar se a transação existe e se o usuário é o comprador
     const transaction = await prisma.transaction.findFirst({
