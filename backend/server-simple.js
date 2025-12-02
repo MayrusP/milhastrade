@@ -849,13 +849,18 @@ app.post('/api/offers/:id/buy', async (req, res) => {
 
 app.get('/api/user/transactions', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-    
-    console.log('💰 GET /api/user/transactions - Token:', token);
+    console.log('💰 GET /api/user/transactions');
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Buscar transações reais do usuário no banco (como comprador e vendedor)
     const transactions = await prisma.transaction.findMany({
@@ -922,9 +927,15 @@ app.get('/api/user/transactions', async (req, res) => {
 // Buscar notificações do usuário
 app.get('/api/notifications', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-    const userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     const notifications = await prisma.notification.findMany({
       where: { userId },
@@ -971,9 +982,15 @@ app.put('/api/notifications/:id/read', async (req, res) => {
 // Marcar todas notificações como lidas
 app.put('/api/notifications/read-all', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-    const userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     await prisma.notification.updateMany({
       where: { userId, read: false },
