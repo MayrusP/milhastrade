@@ -60,9 +60,22 @@ export const PendingApprovalsModal: React.FC<PendingApprovalsModalProps> = ({
       const response = await api.get('/user/pending-approvals');
       console.log('📡 Resposta do carregamento:', response.data);
       if (response.data.success) {
-        console.log('📋 Aprovações carregadas:', response.data.data.pendingApprovals.length);
-        console.log('📋 Detalhes das aprovações:', response.data.data.pendingApprovals);
-        setApprovals(response.data.data.pendingApprovals);
+        const approvalsList = response.data.data.pendingApprovals;
+        console.log('📋 Aprovações carregadas:', approvalsList.length);
+        console.log('📋 Detalhes completos:', JSON.stringify(approvalsList, null, 2));
+        
+        // Log de cada aprovação
+        approvalsList.forEach((approval, index) => {
+          console.log(`📋 Aprovação ${index + 1}:`, {
+            id: approval.id,
+            type: approval.type,
+            passengerName: approval.passengerName,
+            changedFields: approval.changedFields,
+            changedFieldsCount: approval.changedFields?.length || 0
+          });
+        });
+        
+        setApprovals(approvalsList);
       }
     } catch (error) {
       console.error('Erro ao carregar aprovações pendentes:', error);
