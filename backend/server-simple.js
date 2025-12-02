@@ -2688,13 +2688,18 @@ app.post('/api/transactions/:transactionId/passengers', async (req, res) => {
 app.get('/api/user/pending-approvals', async (req, res) => {
   console.log('🚨 ENDPOINT CHAMADO - INÍCIO');
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-    
-    console.log('📋 GET /api/user/pending-approvals - Token:', token);
+    console.log('📋 GET /api/user/pending-approvals');
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     console.log('🔍 Buscando aprovações para vendedor:', userId);
     
     // Buscar edições pendentes onde o usuário é o vendedor (approver)
@@ -2772,16 +2777,22 @@ app.get('/api/user/pending-approvals', async (req, res) => {
 // Processar aprovação/rejeição de edição de passageiro
 app.put('/api/passenger-edits/:editId/approve', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const { editId } = req.params;
     const { action, reason } = req.body;
     
-    console.log(`📋 PUT /api/passenger-edits/${editId}/approve - Token: ${token}`);
+    console.log(`📋 PUT /api/passenger-edits/${editId}/approve`);
     console.log('Ação:', action, 'Motivo:', reason);
     
     // Extrair ID do usuário do token
-    let userId = token.replace('mock-jwt-token-', '');
+    let userId;
+    try {
+      userId = getUserIdFromToken(req.headers.authorization);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
     
     // Buscar a edição pendente
     const edit = await prisma.passengerDataEdit.findUnique({
