@@ -2386,6 +2386,7 @@ app.get('/api/transactions/:transactionId/passengers', async (req, res) => {
     }));
 
     console.log(`✅ Encontrados ${formattedPassengers.length} passageiros para transação ${transactionId}`);
+    console.log(`⏱️ Timer retornado: ${timeRemaining} segundos (${Math.floor(timeRemaining / 60)} minutos)`);
 
     res.json({
       success: true,
@@ -2395,7 +2396,9 @@ app.get('/api/transactions/:transactionId/passengers', async (req, res) => {
           id: transaction.id,
           status: transaction.status,
           buyer: transaction.buyer,
-          seller: transaction.seller
+          seller: transaction.seller,
+          createdAt: transaction.createdAt,
+          editTimeRemaining: timeRemaining // Retornar timer mesmo sem passageiros
         }
       }
     });
