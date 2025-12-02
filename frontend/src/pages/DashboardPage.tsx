@@ -4,6 +4,7 @@ import { TransactionSearchModal } from '../components/common/TransactionSearchMo
 import { EditOfferModal } from '../components/common/EditOfferModal';
 import { EditPassengerDataModal } from '../components/common/EditPassengerDataModal';
 import { PendingApprovalsModal } from '../components/common/PendingApprovalsModal';
+import { NotificationsPanel } from '../components/common/NotificationsPanel';
 import { api } from '../services/api';
 import { Link } from 'react-router-dom';
 import { RatingModal } from '../components/rating/RatingModal';
@@ -75,7 +76,14 @@ interface Transaction {
 
 export const DashboardPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
+  const { markAllAsRead } = useNotifications();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  
+  // Marcar todas notificações como lidas ao entrar no Dashboard
+  useEffect(() => {
+    markAllAsRead();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  
   const [offers, setOffers] = useState<Offer[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingRatings, setPendingRatings] = useState<Transaction[]>([]);
@@ -563,7 +571,10 @@ export const DashboardPage: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => setPendingApprovalsModal(true)}
+                      onClick={() => {
+                        setPendingApprovalsModal(true);
+                        setShowApprovalsNotification(false); // Ocultar notificação ao abrir modal
+                      }}
                       className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
                     >
                       Ver {pendingApprovalsCount === 1 ? 'Pendência' : 'Pendências'}
@@ -584,6 +595,11 @@ export const DashboardPage: React.FC = () => {
           </div>
         )}
 
+        {/* Painel de Notificações */}
+        <div className="mb-8">
+          <NotificationsPanel />
+        </div>
+
         {/* Offers with Tabs */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
@@ -603,7 +619,10 @@ export const DashboardPage: React.FC = () => {
                 Ativas ({getTabCount('ACTIVE')})
               </button>
               <button
-                onClick={() => setActiveTab('sold')}
+                onClick={() => {
+                  setActiveTab('sold');
+                  markSalesAsViewed(); // Ocultar notificação de vendas ao clicar na aba
+                }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'sold'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
