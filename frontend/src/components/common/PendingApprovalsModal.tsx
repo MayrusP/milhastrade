@@ -332,25 +332,43 @@ export const PendingApprovalsModal: React.FC<PendingApprovalsModalProps> = ({
                         </h5>
                         <div className="space-y-3">
                           {approval.changedFields?.map((change, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-md">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-1">
-                                  <span className="font-medium text-gray-900 dark:text-white">
-                                    {getFieldLabel(change.field)}
+                            <div key={index} className="p-4 bg-white dark:bg-gray-600 rounded-md border-l-4 border-orange-500">
+                              <div className="flex items-center space-x-2 mb-3">
+                                <span className="font-semibold text-gray-900 dark:text-white text-base">
+                                  {getFieldLabel(change.field)}
+                                </span>
+                                {change.critical && (
+                                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full font-medium">
+                                    ⚠️ Crítico
                                   </span>
-                                  {change.critical && (
-                                    <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                                      Crítico
-                                    </span>
-                                  )}
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Valor Anterior */}
+                                <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-md border border-red-200 dark:border-red-800">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    <span className="text-xs font-semibold text-red-700 dark:text-red-300 uppercase">Valor Anterior</span>
+                                  </div>
+                                  <p className="text-sm text-red-900 dark:text-red-100 font-medium break-words">
+                                    {change.oldValue || '(vazio)'}
+                                  </p>
                                 </div>
-                                <div className="text-sm">
-                                  <div className="text-gray-600 dark:text-gray-400">
-                                    <span className="font-medium">De:</span> {change.oldValue}
+                                
+                                {/* Novo Valor */}
+                                <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-md border border-green-200 dark:border-green-800">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase">Novo Valor</span>
                                   </div>
-                                  <div className="text-gray-900 dark:text-white">
-                                    <span className="font-medium">Para:</span> {change.newValue}
-                                  </div>
+                                  <p className="text-sm text-green-900 dark:text-green-100 font-medium break-words">
+                                    {change.newValue || '(vazio)'}
+                                  </p>
                                 </div>
                               </div>
                             </div>
