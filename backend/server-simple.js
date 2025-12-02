@@ -2553,6 +2553,21 @@ app.put('/api/transactions/:transactionId/passengers/:passengerId', async (req, 
 
       console.log(`📋 Criadas ${changes.length} solicitações de edição para passageiro ${passengerId}`);
 
+      // Criar notificação para o vendedor
+      await prisma.notification.create({
+        data: {
+          userId: transaction.sellerId,
+          type: 'APPROVAL_PENDING',
+          title: '⏳ Aprovação pendente',
+          message: `Edição de passageiro aguardando sua aprovação (${changes.length} alteração${changes.length > 1 ? 'ões' : ''})`,
+          data: JSON.stringify({ 
+            transactionId: transaction.id,
+            passengerId: passengerId,
+            changesCount: changes.length
+          })
+        }
+      });
+
       res.json({
         success: true,
         data: {
@@ -2597,6 +2612,14 @@ app.post('/api/transactions/:transactionId/passengers', async (req, res) => {
       where: {
         id: transactionId,
         buyerId: userId
+      },
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     });
 
@@ -2677,6 +2700,22 @@ app.post('/api/transactions/:transactionId/passengers', async (req, res) => {
       }
 
       console.log(`📋 Criadas ${pendingPassengers.length} solicitações de aprovação para novos passageiros`);
+
+      // Criar notificação para o vendedor
+      await prisma.notification.create({
+        data: {
+          userId: transaction.sellerId,
+          type: 'PASSENGER_DATA_EDIT',
+          title: 'Solicitação de Adição de Passageiros',
+          message: `${transaction.buyer.name} solicitou adicionar ${pendingPassengers.length} passageiro(s)`,
+          data: JSON.stringify({
+            transactionId: transactionId,
+            passengersCount: pendingPassengers.length
+          })
+        }
+      });
+
+      console.log(`📧 Notificação enviada para vendedor ${transaction.sellerId}`);
 
       res.json({
         success: true,
